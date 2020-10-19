@@ -12,6 +12,7 @@ output: github_document
 
 library(tidyverse)
 library(rcfss)
+library(knitr)
 
 data("dadmom")
 dadmom
@@ -21,6 +22,17 @@ dadmom
 
 ```{r}
 # write your code to tidy the data here
+tidy_dadmom <- dadmom %>%
+  pivot_longer(
+    cols=-famid,names_to="variable", values_to="value",
+    values_transform=list(value=as.character)) %>%
+  separate(variable, into=c("name", "Dad_or_Mom"), sep=-1) %>%
+  pivot_wider(names_from = name, values_from=value) %>%
+  mutate(inc=as.numeric(inc))
+kable(tidy_dadmom)
+
+#add comments
+
 ```
 
 ## Session info
