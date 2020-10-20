@@ -21,6 +21,17 @@ library(tidyverse)
     ## x dplyr::lag()    masks stats::lag()
 
 ``` r
+library(lubridate)
+```
+
+    ## 
+    ## Attaching package: 'lubridate'
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     date, intersect, setdiff, union
+
+``` r
 # load data
 case_data <- read_csv("data/scdb-case.csv")
 ```
@@ -89,8 +100,8 @@ case_data %>%
   group_by(term) %>%
   summarize(one_vote_margin = sum(difference == "1") / n()) %>%
   ggplot() +
-  geom_line(aes(x = term, y = one_vote_margin)) +
-  labs(title = "Percentage of one-vote margin decisions per term", x = "Term", y = "Percentage")
+  geom_line(aes(x = term, y = one_vote_margin, color = one_vote_margin)) +
+  labs(title = "Percentage of one-vote margin decisions per term", x = "Term", y = "Percentage", color = "Percentage")
 ```
 
     ## `summarise()` ungrouping output (override with `.groups` argument)
@@ -103,7 +114,46 @@ Organize the resulting graph by justice in descending order of
 seniority. (Note that the chief justice is always considered the most
 senior member of the court, regardless of appointment date.)
 
+``` r
+combined_data <- inner_join(x = vote_data, y = case_data) %>% #connecting issueArea to vote data
+  filter(justice == 108 | (justice >= 110 & justice <= 116) & (issueArea == 1 | issueArea == 2 | issueArea == 8 | issueArea == 12)) %>%
+  group_by(justiceName) %>%
+  mutate(justiceName = factor(justiceName, levels = c("JGRoberts", "CThomas", "SGBreyer",                                                    "SAAlito", "SSotomayor", "EKagan","NMGorsuch","BMKavanaugh"))) %>%
+  summarize(conservative_freq = sum(direction == "1", na.rm = TRUE) / n())
+```
+
+    ## Joining, by = c("caseId", "docketId", "caseIssuesId", "term")
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+``` r
+ggplot(combined_data) +
+  geom_col(aes(x = justiceName, y = conservative_freq, fill = conservative_freq)) +
+  labs(title = "Ratio of Conservative Votes per Justice", x = "Justice Name", y = "Ratio of Votes", fill = "Conservative Ratio") +
+  coord_flip()
+```
+
+![](scotus_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
 ## In each term, how many of the term’s published decisions (decided after oral arguments) were announced in a given month?
+
+``` r
+dated_case_data <- case_data %>%
+  mutate(dateDecision = mdy(dateDecision)) %>%
+  mutate(monthDecision = month(dateDecision)) %>%
+  mutate(monthDecision = factor(monthDecision,
+    levels = c(10:12, 1:9),
+    labels = c(month.abb[10:12], month.abb[1:9]))) %>%
+  group_by(term, monthDecision) %>%
+  count()
+
+  ggplot(data=dated_case_data) +
+  geom_line(aes(x = term, y = n, color = n)) +
+  labs(title = "Decisions per month per year", x = "Year", y = "Decisions per Month", color = "Count") +
+  facet_wrap(~monthDecision)
+```
+
+![](scotus_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ## Which justices are most likely to agree with with the Court’s declaration that an act of Congress, a state or territorial law, or a municipal ordinance is unconstitutional? Identify all cases where the Court declared something unconstitutional and determine the ten justices who most and least frequently agreed with this outcome as a percentage of all votes cast by the justice in these cases. Exclude any justice with fewer than 30 votes in cases where the Court’s outcome declares something unconstitutional.
 
@@ -168,7 +218,7 @@ devtools::session_info()
     ##  knitr         1.30    2020-09-22 [1] CRAN (R 4.0.2)
     ##  labeling      0.3     2014-08-23 [1] CRAN (R 4.0.0)
     ##  lifecycle     0.2.0   2020-03-06 [1] CRAN (R 4.0.2)
-    ##  lubridate     1.7.9   2020-06-08 [1] CRAN (R 4.0.2)
+    ##  lubridate   * 1.7.9   2020-06-08 [1] CRAN (R 4.0.2)
     ##  magrittr      1.5     2014-11-22 [1] CRAN (R 4.0.2)
     ##  memoise       1.1.0   2017-04-21 [1] CRAN (R 4.0.2)
     ##  modelr        0.1.8   2020-05-19 [1] CRAN (R 4.0.2)
