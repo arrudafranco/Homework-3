@@ -1,6 +1,6 @@
 ---
 title: "Exploring U.S. Supreme Court Decisions"
-author: "Your name"
+author: "Gustavo Arruda"
 output: github_document
 ---
 
@@ -11,7 +11,8 @@ output: github_document
 library(tidyverse)
 
 # load data
-
+case_data <- read_csv("data/scdb-case.csv")
+vote_data <- read_csv("data/scdb-vote.csv")
 ```
 
 ## Recode variables as you find necessary
@@ -24,6 +25,14 @@ library(tidyverse)
 
 ```{r}
 
+case_data %>%
+  mutate(difference = majVotes - minVotes) %>%
+  group_by(term) %>%
+  summarize(one_vote_margin = sum(difference == "1") / n()) %>%
+  ggplot() +
+  geom_line(aes(x = term, y = one_vote_margin)) +
+  labs(title = "Percentage of one-vote margin decisions per term", x = "Term", y = "Percentage")
+  
 ```
 
 ## For justices [currently serving on the Supreme Court](https://www.supremecourt.gov/about/biographies.aspx), how often have they voted in the conservative direction in cases involving criminal procedure, civil rights, economic activity, and federal taxation?

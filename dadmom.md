@@ -1,6 +1,6 @@
 Tidying `dadmom`
 ================
-Your name
+Gustavo Arruda
 
 # Get the data
 
@@ -59,6 +59,10 @@ kable(tidy_dadmom)
 |     2 | m            | Amy  | 18000 |
 |     3 | d            | Paul | 25000 |
 |     3 | m            | Pat  | 50000 |
+
+``` r
+#add comments
+```
 
 ## Session info
 

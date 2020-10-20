@@ -1,6 +1,6 @@
 ---
 title: "Tidying `dadmom`"
-author: "Your name"
+author: "Gustavo Arruda"
 output: github_document
 ---
 
