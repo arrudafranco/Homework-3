@@ -261,6 +261,19 @@ case_data %>%
 
 ## The Chief Justice is frequently seen as capable of influencing the ideological direction of the Court. Create a graph similar to the one above that also incorporates information on who was the Chief Justice during the term.
 
+``` r
+case_data %>%
+  group_by(term, chief) %>%
+  summarize(conservative_ratio = sum(decisionDirection == 1, na.rm = TRUE) / n()) %>%
+  ggplot(aes(x = term, y = conservative_ratio, color = chief)) +
+  geom_line() +
+  labs(title = "Conservative Direction per Term", x = "Term", y = "Ratio of Directions", color = "Chief Justice")
+```
+
+    ## `summarise()` regrouping output by 'term' (override with `.groups` argument)
+
+![](scotus_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
 ## Session info
 
 ``` r

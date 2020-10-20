@@ -154,6 +154,13 @@ case_data %>%
 
 ```{r}
 
+case_data %>%
+  group_by(term, chief) %>%
+  summarize(conservative_ratio = sum(decisionDirection == 1, na.rm = TRUE) / n()) %>%
+  ggplot(aes(x = term, y = conservative_ratio, color = chief)) +
+  geom_line() +
+  labs(title = "Conservative Direction per Term", x = "Term", y = "Ratio of Directions", color = "Chief Justice")
+
 ```
 
 ## Session info
