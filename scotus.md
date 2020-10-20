@@ -157,6 +157,39 @@ dated_case_data <- case_data %>%
 
 ## Which justices are most likely to agree with with the Court’s declaration that an act of Congress, a state or territorial law, or a municipal ordinance is unconstitutional? Identify all cases where the Court declared something unconstitutional and determine the ten justices who most and least frequently agreed with this outcome as a percentage of all votes cast by the justice in these cases. Exclude any justice with fewer than 30 votes in cases where the Court’s outcome declares something unconstitutional.
 
+``` r
+unCon_data <- case_data %>%
+  inner_join(vote_data) %>% #coordinate individual justices with constitutionality ruling
+  group_by(justiceName) %>% #using individual justices as frame of analysis
+  filter(declarationUncon != 1 & n() > 30) %>% #filtering out unwanted cases
+  summarize(agree_unCon = sum(vote == 1, na.rm = TRUE) / n()) #creating a "proportion of agreement" variable, while avoiding NA messing up the analysis
+```
+
+    ## Joining, by = c("caseId", "docketId", "caseIssuesId", "term")
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+``` r
+most_agr <- slice_max(unCon_data, n = 10, agree_unCon) #slicing top 10 most agreeable
+least_agr <- slice_min(unCon_data, n = 10, agree_unCon) #slicing top 10 least agreeable
+
+ggplot(most_agr) +
+  geom_col(aes(x = justiceName, y = agree_unCon, fill = agree_unCon)) +
+  labs(title = "Unconstitutionality Agreement", x = "Justice Name", y = "Ratio of Agreements", fill = "Agreements") +
+  coord_flip()
+```
+
+![](scotus_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+``` r
+ggplot(least_agr) +
+  geom_col(aes(x = justiceName, y = agree_unCon, fill = agree_unCon)) +
+  labs(title = "Unconstitutionality Disagreement", x = "Justice Name", y = "Ratio of Agreements", fill = "Agreements") +
+  coord_flip()
+```
+
+![](scotus_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
+
 ## In each term he served on the Court, in what percentage of cases was Justice Antonin Scalia in the majority?
 
 ## Create a graph similar to above that adds a second component which compares the percentage for all cases versus non-unanimous cases (i.e. there was at least one dissenting vote)
@@ -181,7 +214,7 @@ devtools::session_info()
     ##  collate  English_United States.1252  
     ##  ctype    English_United States.1252  
     ##  tz       America/Chicago             
-    ##  date     2020-10-19                  
+    ##  date     2020-10-20                  
     ## 
     ## - Packages -------------------------------------------------------------------
     ##  package     * version date       lib source        
