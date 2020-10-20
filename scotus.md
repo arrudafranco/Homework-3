@@ -221,6 +221,26 @@ ggplot(scalia_data, aes(x = term, y = maj_ratio, color = maj_ratio)) +
 
 ## Create a graph similar to above that adds a second component which compares the percentage for all cases versus non-unanimous cases (i.e. there was at least one dissenting vote)
 
+``` r
+scalia_2layers <- inner_join(x = vote_data, y = case_data) %>%
+  filter(justice == 105 & minVotes >= 1) %>%
+  group_by(term) %>%
+  summarize(maj_ratio = sum(majority == 2, na.rm = TRUE) / n())
+```
+
+    ## Joining, by = c("caseId", "docketId", "caseIssuesId", "term")
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+``` r
+ggplot() +
+  geom_line(scalia_data, mapping = aes(x = term, y = maj_ratio, color = "General Proportion") ) +
+  geom_line(scalia_2layers, mapping = aes(x = term, y = maj_ratio, color = "Non-Unanimous")) +
+  labs(title = "Ratio of Scalia Majority Votes", x = "Term", y = "Ratio of Majority Votes", color = "General vs. Non-unanimous")
+```
+
+![](scotus_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
 ## In each term, what percentage of cases were decided in the conservative direction?
 
 ## The Chief Justice is frequently seen as capable of influencing the ideological direction of the Court. Create a graph similar to the one above that also incorporates information on who was the Chief Justice during the term.

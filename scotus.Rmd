@@ -123,6 +123,17 @@ ggplot(scalia_data, aes(x = term, y = maj_ratio, color = maj_ratio)) +
 
 ```{r}
 
+scalia_2layers <- inner_join(x = vote_data, y = case_data) %>%
+  filter(justice == 105 & minVotes >= 1) %>%
+  group_by(term) %>%
+  summarize(maj_ratio = sum(majority == 2, na.rm = TRUE) / n())
+
+ggplot() +
+  geom_line(scalia_data, mapping = aes(x = term, y = maj_ratio, color = "General Proportion") ) +
+  geom_line(scalia_2layers, mapping = aes(x = term, y = maj_ratio, color = "Non-Unanimous")) +
+  labs(title = "Ratio of Scalia Majority Votes", x = "Term", y = "Ratio of Majority Votes", color = "General vs. Non-unanimous")
+  
+
 ```
 
 ## In each term, what percentage of cases were decided in the conservative direction?
