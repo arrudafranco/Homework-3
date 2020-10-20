@@ -32,6 +32,8 @@ library(lubridate)
     ##     date, intersect, setdiff, union
 
 ``` r
+theme_set(theme_light())
+
 # load data
 case_data <- read_csv("data/scdb-case.csv")
 ```
@@ -99,12 +101,17 @@ case_data %>%
   mutate(difference = majVotes - minVotes) %>%
   group_by(term) %>%
   summarize(one_vote_margin = sum(difference == "1") / n()) %>%
-  ggplot() +
-  geom_line(aes(x = term, y = one_vote_margin, color = one_vote_margin)) +
+  ggplot(aes(x = term, y = one_vote_margin, color = one_vote_margin)) +
+  geom_line() +
+  geom_smooth() +
   labs(title = "Percentage of one-vote margin decisions per term", x = "Term", y = "Percentage", color = "Percentage")
 ```
 
     ## `summarise()` ungrouping output (override with `.groups` argument)
+
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+    ## Warning: Removed 15 rows containing non-finite values (stat_smooth).
 
 ![](scotus_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
@@ -161,7 +168,8 @@ dated_case_data <- case_data %>%
 unCon_data <- case_data %>%
   inner_join(vote_data) %>% #coordinate individual justices with constitutionality ruling
   group_by(justiceName) %>% #using individual justices as frame of analysis
-  filter(declarationUncon != 1 & n() > 30) %>% #filtering out unwanted cases
+  filter(declarationUncon != 1) %>% #filtering unconstitutionality rulings
+  filter(n() >= 30) %>% #filtering out unwanted cases
   summarize(agree_unCon = sum(vote == 1, na.rm = TRUE) / n()) #creating a "proportion of agreement" variable, while avoiding NA messing up the analysis
 ```
 
@@ -174,8 +182,8 @@ most_agr <- slice_max(unCon_data, n = 10, agree_unCon) #slicing top 10 most agre
 least_agr <- slice_min(unCon_data, n = 10, agree_unCon) #slicing top 10 least agreeable
 
 ggplot(most_agr) +
-  geom_col(aes(x = justiceName, y = agree_unCon, fill = agree_unCon)) +
-  labs(title = "Unconstitutionality Agreement", x = "Justice Name", y = "Ratio of Agreements", fill = "Agreements") +
+  geom_col(aes(x = justiceName, y = agree_unCon, fill = justiceName)) +
+  labs(title = "Unconstitutionality Agreement", x = "Justice Name", y = "Ratio of Agreements", fill = "Justices") +
   coord_flip()
 ```
 
@@ -183,14 +191,33 @@ ggplot(most_agr) +
 
 ``` r
 ggplot(least_agr) +
-  geom_col(aes(x = justiceName, y = agree_unCon, fill = agree_unCon)) +
-  labs(title = "Unconstitutionality Disagreement", x = "Justice Name", y = "Ratio of Agreements", fill = "Agreements") +
+  geom_col(aes(x = justiceName, y = agree_unCon, fill = justiceName)) +
+  labs(title = "Unconstitutionality Disagreement", x = "Justice Name", y = "Ratio of Agreements", fill = "Justices") +
   coord_flip()
 ```
 
 ![](scotus_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
 
 ## In each term he served on the Court, in what percentage of cases was Justice Antonin Scalia in the majority?
+
+``` r
+scalia_data <- filter(vote_data, justice == 105) %>%
+  group_by(term) %>%
+  summarize(maj_ratio = sum(majority == 2, na.rm = TRUE) / n())
+```
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+``` r
+ggplot(scalia_data, aes(x = term, y = maj_ratio, color = maj_ratio)) +
+  geom_line() +
+  geom_smooth() +
+  labs(title = "Ratio of Scalia's Majority Votes per Term", x = "Terms", y = "Ratio of Majority Votes", color = "Ratio")
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+![](scotus_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ## Create a graph similar to above that adds a second component which compares the percentage for all cases versus non-unanimous cases (i.e. there was at least one dissenting vote)
 
@@ -250,12 +277,16 @@ devtools::session_info()
     ##  jsonlite      1.7.1   2020-09-07 [1] CRAN (R 4.0.2)
     ##  knitr         1.30    2020-09-22 [1] CRAN (R 4.0.2)
     ##  labeling      0.3     2014-08-23 [1] CRAN (R 4.0.0)
+    ##  lattice       0.20-41 2020-04-02 [2] CRAN (R 4.0.2)
     ##  lifecycle     0.2.0   2020-03-06 [1] CRAN (R 4.0.2)
     ##  lubridate   * 1.7.9   2020-06-08 [1] CRAN (R 4.0.2)
     ##  magrittr      1.5     2014-11-22 [1] CRAN (R 4.0.2)
+    ##  Matrix        1.2-18  2019-11-27 [2] CRAN (R 4.0.2)
     ##  memoise       1.1.0   2017-04-21 [1] CRAN (R 4.0.2)
+    ##  mgcv          1.8-31  2019-11-09 [2] CRAN (R 4.0.2)
     ##  modelr        0.1.8   2020-05-19 [1] CRAN (R 4.0.2)
     ##  munsell       0.5.0   2018-06-12 [1] CRAN (R 4.0.2)
+    ##  nlme          3.1-148 2020-05-24 [2] CRAN (R 4.0.2)
     ##  pillar        1.4.6   2020-07-10 [1] CRAN (R 4.0.2)
     ##  pkgbuild      1.1.0   2020-07-13 [1] CRAN (R 4.0.2)
     ##  pkgconfig     2.0.3   2019-09-22 [1] CRAN (R 4.0.2)

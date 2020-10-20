@@ -10,6 +10,7 @@ output: github_document
 # load useful packages
 library(tidyverse)
 library(lubridate)
+theme_set(theme_light())
 
 # load data
 case_data <- read_csv("data/scdb-case.csv")
@@ -30,8 +31,9 @@ case_data %>%
   mutate(difference = majVotes - minVotes) %>%
   group_by(term) %>%
   summarize(one_vote_margin = sum(difference == "1") / n()) %>%
-  ggplot() +
-  geom_line(aes(x = term, y = one_vote_margin, color = one_vote_margin)) +
+  ggplot(aes(x = term, y = one_vote_margin, color = one_vote_margin)) +
+  geom_line() +
+  geom_smooth() +
   labs(title = "Percentage of one-vote margin decisions per term", x = "Term", y = "Percentage", color = "Percentage")
   
 ```
@@ -84,20 +86,21 @@ dated_case_data <- case_data %>%
 unCon_data <- case_data %>%
   inner_join(vote_data) %>% #coordinate individual justices with constitutionality ruling
   group_by(justiceName) %>% #using individual justices as frame of analysis
-  filter(declarationUncon != 1 & n() > 30) %>% #filtering out unwanted cases
+  filter(declarationUncon != 1) %>% #filtering unconstitutionality rulings
+  filter(n() >= 30) %>% #filtering out unwanted cases
   summarize(agree_unCon = sum(vote == 1, na.rm = TRUE) / n()) #creating a "proportion of agreement" variable, while avoiding NA messing up the analysis
 
 most_agr <- slice_max(unCon_data, n = 10, agree_unCon) #slicing top 10 most agreeable
 least_agr <- slice_min(unCon_data, n = 10, agree_unCon) #slicing top 10 least agreeable
 
 ggplot(most_agr) +
-  geom_col(aes(x = justiceName, y = agree_unCon, fill = agree_unCon)) +
-  labs(title = "Unconstitutionality Agreement", x = "Justice Name", y = "Ratio of Agreements", fill = "Agreements") +
+  geom_col(aes(x = justiceName, y = agree_unCon, fill = justiceName)) +
+  labs(title = "Unconstitutionality Agreement", x = "Justice Name", y = "Ratio of Agreements", fill = "Justices") +
   coord_flip()
 
 ggplot(least_agr) +
-  geom_col(aes(x = justiceName, y = agree_unCon, fill = agree_unCon)) +
-  labs(title = "Unconstitutionality Disagreement", x = "Justice Name", y = "Ratio of Agreements", fill = "Agreements") +
+  geom_col(aes(x = justiceName, y = agree_unCon, fill = justiceName)) +
+  labs(title = "Unconstitutionality Disagreement", x = "Justice Name", y = "Ratio of Agreements", fill = "Justices") +
   coord_flip()
   
 ```
@@ -105,6 +108,14 @@ ggplot(least_agr) +
 ## In each term he served on the Court, in what percentage of cases was Justice Antonin Scalia in the majority?
 
 ```{r}
+scalia_data <- filter(vote_data, justice == 105) %>%
+  group_by(term) %>%
+  summarize(maj_ratio = sum(majority == 2, na.rm = TRUE) / n())
+
+ggplot(scalia_data, aes(x = term, y = maj_ratio, color = maj_ratio)) +
+  geom_line() +
+  geom_smooth() +
+  labs(title = "Ratio of Scalia's Majority Votes per Term", x = "Terms", y = "Ratio of Majority Votes", color = "Ratio")
 
 ```
 
